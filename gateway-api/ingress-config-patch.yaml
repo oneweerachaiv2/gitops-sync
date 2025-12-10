@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: apisix-ingress-config
-  namespace: apisix
+  namespace: apisix-gitops
 data:
   config.yaml: |
     log_level: info
@@ -24,7 +24,7 @@ data:
       sync_period: 1m
       init_sync_delay: 5s
       gateway_proxy:
-        - namespace: apisix
+        - namespace: apisix-gitops
           name: apisix-gateway-proxy
     webhook:
       enable: true

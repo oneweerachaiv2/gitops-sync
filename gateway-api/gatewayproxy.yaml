@@ -4,7 +4,7 @@ apiVersion: apisix.apache.org/v1alpha1
 kind: GatewayProxy
 metadata:
   name: apisix-gateway-proxy
-  namespace: apisix
+  namespace: apisix-gitops
 spec:
   # Provider configuration for APISIX Control Plane
   provider:
