@@ -1,0 +1,37 @@
+# HTTPRoute for API v1 using Gateway API
+# This replaces ApisixRoute CRD with standard Kubernetes Gateway API
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: api-v1-users
+  namespace: apisix
+  labels:
+    api-version: "v1"
+    environment: dev
+spec:
+  parentRefs:
+    - name: apisix-gateway
+      namespace: apisix
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/v1/users
+          method: GET
+        - path:
+            type: PathPrefix
+            value: /api/v1/users
+          method: POST
+      backendRefs:
+        - name: httpbin
+          namespace: httpbin
+          port: 8000
+      filters:
+        - type: ResponseHeaderModifier
+          responseHeaderModifier:
+            set:
+              - name: X-API-Version
+                value: "1"
+              - name: X-Environment
+                value: "development"
+

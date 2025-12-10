@@ -1,0 +1,101 @@
+# ArgoCD PostSync Hook - Sync Routes to APISIX Admin API
+# This Job runs after ArgoCD syncs the ApisixRoute CRDs
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: apisix-route-sync
+  namespace: apisix
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+  labels:
+    app.kubernetes.io/component: route-sync
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: apisix-route-sync
+      containers:
+        - name: sync
+          image: bitnami/kubectl:latest
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              echo "=== APISIX Route Sync Job ==="
+              ADMIN_URL="http://apisix-admin:9180"
+              API_KEY="edd1c9f034335f136f87ad84b625c8f1"
+              
+              # Get all ApisixRoutes from Kubernetes
+              echo "Reading ApisixRoute resources..."
+              
+              for route in $(kubectl get apisixroute -n apisix -o jsonpath='{.items[*].metadata.name}'); do
+                echo "Processing route: $route"
+                
+                # Get route spec
+                ROUTE_JSON=$(kubectl get apisixroute $route -n apisix -o json)
+                
+                # Extract route details
+                NAME=$(echo $ROUTE_JSON | jq -r '.metadata.name')
+                URI=$(echo $ROUTE_JSON | jq -r '.spec.http[0].match.paths[0]')
+                METHODS=$(echo $ROUTE_JSON | jq -c '.spec.http[0].match.methods')
+                SERVICE=$(echo $ROUTE_JSON | jq -r '.spec.http[0].backends[0].serviceName')
+                PORT=$(echo $ROUTE_JSON | jq -r '.spec.http[0].backends[0].servicePort')
+                
+                echo "  Name: $NAME, URI: $URI, Methods: $METHODS"
+                
+                # Create/Update route in APISIX
+                curl -s -X PUT "$ADMIN_URL/apisix/admin/routes/$NAME" \
+                  -H "X-API-Key: $API_KEY" \
+                  -H "Content-Type: application/json" \
+                  -d "{
+                    \"name\": \"$NAME\",
+                    \"uri\": \"${URI}*\",
+                    \"methods\": $METHODS,
+                    \"upstream\": {
+                      \"type\": \"roundrobin\",
+                      \"nodes\": {
+                        \"$SERVICE:$PORT\": 1
+                      }
+                    }
+                  }" | jq -r '.key // .error_msg'
+              done
+              
+              echo "=== Sync Complete ==="
+---
+# ServiceAccount for the sync job
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: apisix-route-sync
+  namespace: apisix
+---
+# Role to read ApisixRoutes
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: apisix-route-reader
+  namespace: apisix
+rules:
+  - apiGroups: ["apisix.apache.org"]
+    resources: ["apisixroutes", "apisixupstreams"]
+    verbs: ["get", "list", "watch"]
+---
+# RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: apisix-route-sync-binding
+  namespace: apisix
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: apisix-route-reader
+subjects:
+  - kind: ServiceAccount
+    name: apisix-route-sync
+    namespace: apisix
+

@@ -1,0 +1,32 @@
+# GatewayProxy - APISIX-specific CRD that bridges Gateway API with APISIX
+# This configures how HTTPRoutes are synced to the APISIX gateway
+apiVersion: apisix.apache.org/v1alpha1
+kind: GatewayProxy
+metadata:
+  name: apisix-gateway-proxy
+  namespace: apisix
+spec:
+  # Provider configuration for APISIX Control Plane
+  provider:
+    type: ControlPlane
+    controlPlane:
+      endpoints:
+        - http://apisix-admin:9180
+      auth:
+        type: AdminKey
+        adminKey:
+          valueFrom:
+            secretKeyRef:
+              name: apisix-admin-credentials
+              key: admin-key
+---
+# Secret for APISIX Admin API Key (for GatewayProxy)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: apisix-admin-credentials
+  namespace: apisix
+type: Opaque
+stringData:
+  admin-key: "edd1c9f034335f136f87ad84b625c8f1"
+

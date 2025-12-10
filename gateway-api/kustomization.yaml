@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: apisix-gateway-api
+
+resources:
+  - gatewayclass.yaml
+  - gateway.yaml
+  - httproute-v1.yaml
+  - httproute-v4.yaml
+
+commonLabels:
+  app.kubernetes.io/part-of: apisix-gateway-api
+  app.kubernetes.io/managed-by: argocd
+

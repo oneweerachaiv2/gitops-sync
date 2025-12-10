@@ -1,0 +1,40 @@
+# ConfigMap Reloader - Automatically restarts APISIX when config changes
+# Uses stakater/reloader to watch ConfigMap changes
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apisix
+  namespace: apisix
+  annotations:
+    # Reloader annotation to watch ConfigMap changes
+    configmap.reloader.stakater.com/reload: "apisix-standalone-config"
+spec: {}
+---
+# Alternative: Use a CronJob to reload APISIX config periodically
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: apisix-config-reload
+  namespace: apisix
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  schedule: "*/5 * * * *"  # Every 5 minutes
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: reload-config
+              image: curlimages/curl:8.5.0
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "Triggering APISIX config reload..."
+                  curl -X PUT http://apisix-admin:9180/apisix/admin/plugins/reload \
+                    -H "X-API-Key: edd1c9f034335f136f87ad84b625c8f1"
+                  echo "Config reload triggered"
+

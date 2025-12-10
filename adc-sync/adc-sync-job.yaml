@@ -1,0 +1,95 @@
+# Kubernetes Job to sync APISIX configuration using ADC
+# This is triggered as an ArgoCD PostSync hook
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: adc-sync-job
+  namespace: apisix
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: adc-sync
+          image: ghcr.io/api7/adc:0.21.2
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "=== Syncing APISIX configuration via ADC ==="
+              adc sync -f /config/adc-config.yaml \
+                --addr http://apisix-admin:9180 \
+                --token ${APISIX_ADMIN_KEY}
+              echo "=== Sync complete ==="
+          env:
+            - name: APISIX_ADMIN_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: apisix-admin-credentials
+                  key: admin-key
+          volumeMounts:
+            - name: adc-config
+              mountPath: /config
+      volumes:
+        - name: adc-config
+          configMap:
+            name: adc-config
+---
+# ConfigMap containing the ADC configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: adc-config
+  namespace: apisix
+data:
+  adc-config.yaml: |
+    name: "API Versioning Configuration"
+    version: "1.0.0"
+    upstreams:
+      - name: httpbin-upstream
+        id: httpbin-upstream
+        type: roundrobin
+        nodes:
+          - host: httpbin.httpbin.svc.cluster.local
+            port: 8000
+            weight: 1
+    routes:
+      - name: "Users API V1 - GitOps"
+        id: gitops-api-v1-users
+        uri: /api/v1/users*
+        methods: [GET, POST]
+        upstream_id: httpbin-upstream
+        plugins:
+          response-rewrite:
+            headers:
+              set:
+                X-API-Version: "1"
+                X-Environment: development
+                X-Deployed-By: ADC-GitOps
+      - name: "Users API V4 - GitOps Experimental"
+        id: gitops-api-v4-users
+        uri: /api/v4/users*
+        methods: [GET, POST, PUT, PATCH, DELETE]
+        upstream_id: httpbin-upstream
+        plugins:
+          response-rewrite:
+            headers:
+              set:
+                X-API-Version: "4"
+                X-API-Experimental: "true"
+                X-Deployed-By: ADC-GitOps
+---
+# Secret for APISIX Admin API Key
+apiVersion: v1
+kind: Secret
+metadata:
+  name: apisix-admin-credentials
+  namespace: apisix
+type: Opaque
+stringData:
+  admin-key: "edd1c9f034335f136f87ad84b625c8f1"
+

@@ -1,0 +1,95 @@
+# ADC (APISIX Declarative CLI) Configuration
+# This YAML file defines APISIX routes, upstreams, and plugins declaratively
+# ADC syncs this configuration to APISIX Admin API
+
+name: "API Versioning Configuration"
+version: "1.0.0"
+
+# Upstreams
+upstreams:
+  - name: httpbin-upstream
+    id: httpbin-upstream
+    type: roundrobin
+    nodes:
+      - host: httpbin.httpbin.svc.cluster.local
+        port: 8000
+        weight: 1
+    timeout:
+      connect: 5
+      send: 15
+      read: 15
+    retries: 3
+
+# Routes
+routes:
+  - name: "Users API V1 - GitOps"
+    id: gitops-api-v1-users
+    uri: /api/v1/users*
+    methods:
+      - GET
+      - POST
+    upstream_id: httpbin-upstream
+    plugins:
+      response-rewrite:
+        headers:
+          set:
+            X-API-Version: "1"
+            X-Environment: development
+            X-Deployed-By: ADC-GitOps
+
+  - name: "Users API V2 - GitOps"
+    id: gitops-api-v2-users
+    uri: /api/v2/users*
+    methods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+    upstream_id: httpbin-upstream
+    plugins:
+      response-rewrite:
+        headers:
+          set:
+            X-API-Version: "2"
+            X-Environment: development
+            X-Deployed-By: ADC-GitOps
+
+  - name: "Users API V3 - GitOps Beta"
+    id: gitops-api-v3-users
+    uri: /api/v3/users*
+    methods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+    upstream_id: httpbin-upstream
+    plugins:
+      response-rewrite:
+        headers:
+          set:
+            X-API-Version: "3"
+            X-API-Beta: "true"
+            X-Environment: development
+            X-Deployed-By: ADC-GitOps
+
+  - name: "Users API V4 - GitOps Experimental"
+    id: gitops-api-v4-users
+    uri: /api/v4/users*
+    methods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+    upstream_id: httpbin-upstream
+    plugins:
+      response-rewrite:
+        headers:
+          set:
+            X-API-Version: "4"
+            X-API-Experimental: "true"
+            X-Environment: development
+            X-Deployed-By: ADC-GitOps
+

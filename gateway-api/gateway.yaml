@@ -1,0 +1,28 @@
+# Gateway resource - This is the "GatewayProxy" that enables CRD syncing
+# When this exists, the APISIX ingress controller will sync routes to APISIX
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: apisix-gateway
+  namespace: apisix
+spec:
+  gatewayClassName: apisix
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: https
+      protocol: HTTPS
+      port: 443
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: apisix-tls-secret
+            kind: Secret
+

@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: apisix-configmap-sync
+
+resources:
+  - apisix-standalone-config.yaml
+
+# Note: apisix-deployment-patch.yaml and config-reloader.yaml 
+# require additional setup. See README for instructions.
+
+commonLabels:
+  app.kubernetes.io/part-of: apisix-configmap-sync
+  app.kubernetes.io/managed-by: argocd
+
+# Generate config hash to trigger rolling updates on config changes
+configMapGenerator: []
+
+# To enable rolling updates on ConfigMap changes, uncomment:
+# patches:
+#   - path: apisix-deployment-patch.yaml
+#     target:
+#       kind: Deployment
+#       name: apisix
+

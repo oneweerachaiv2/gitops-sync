@@ -1,0 +1,25 @@
+# Patch to mount the ConfigMap into APISIX deployment
+# Apply this to enable standalone mode with declarative config
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apisix
+  namespace: apisix
+spec:
+  template:
+    metadata:
+      annotations:
+        # This annotation triggers a rolling update when ConfigMap changes
+        checksum/config: "PLACEHOLDER_CONFIGMAP_HASH"
+    spec:
+      containers:
+        - name: apisix
+          volumeMounts:
+            - name: apisix-config
+              mountPath: /usr/local/apisix/conf/apisix.yaml
+              subPath: apisix.yaml
+      volumes:
+        - name: apisix-config
+          configMap:
+            name: apisix-standalone-config
+
