@@ -1,11 +1,11 @@
 # GatewayProxy - APISIX-specific CRD that bridges Gateway API with APISIX
 # This configures how HTTPRoutes are synced to the APISIX gateway
-# In APISIX Ingress Controller 2.0.0, GatewayProxy must be referenced via IngressClass
+# Note: GatewayProxy should be in the apisix namespace for the controller to discover it
 apiVersion: apisix.apache.org/v1alpha1
 kind: GatewayProxy
 metadata:
-  name: apisix-gateway-proxy
-  namespace: apisix-argocd
+  name: apisix-gateway-api-proxy
+  namespace: apisix
 spec:
   # Provider configuration for APISIX Control Plane
   provider:

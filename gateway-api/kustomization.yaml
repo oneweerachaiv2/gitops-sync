@@ -9,7 +9,6 @@ namespace: apisix-argocd
 resources:
   - gatewayclass.yaml
   - gateway.yaml
-  - gatewayproxy.yaml
   - httproute-v1.yaml
   - httproute-v4.yaml
   - tls-secret.yaml
