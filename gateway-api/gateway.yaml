@@ -5,6 +5,8 @@ kind: Gateway
 metadata:
   name: apisix-gateway
   namespace: apisix-argocd
+  annotations:
+    apisix.apache.org/gateway-proxy: apisix-gateway-proxy
 spec:
   gatewayClassName: apisix-argocd
   listeners:

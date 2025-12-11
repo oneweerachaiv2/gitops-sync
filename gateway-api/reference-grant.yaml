@@ -1,0 +1,16 @@
+# ReferenceGrant to allow HTTPRoutes in apisix-argocd namespace
+# to reference Services in httpbin namespace
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-httpbin-reference
+  namespace: httpbin
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: apisix-argocd
+  to:
+    - group: ""
+      kind: Service
+
