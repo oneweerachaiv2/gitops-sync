@@ -4,13 +4,17 @@ kind: Kustomization
 metadata:
   name: apisix-gateway-api
 
+namespace: apisix-argocd
+
 resources:
   - gatewayclass.yaml
   - gateway.yaml
+  - gatewayproxy.yaml
   - httproute-v1.yaml
   - httproute-v4.yaml
 
-commonLabels:
-  app.kubernetes.io/part-of: apisix-gateway-api
-  app.kubernetes.io/managed-by: argocd
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: apisix-gateway-api
+      app.kubernetes.io/managed-by: argocd
 

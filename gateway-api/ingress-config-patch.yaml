@@ -1,35 +1,9 @@
-# Patch to update APISIX Ingress Controller ConfigMap to reference GatewayProxy
+# Patch to update APISIX Ingress Controller ConfigMap
+# Note: In APISIX Ingress Controller 2.0.0, GatewayProxy is referenced via IngressClass,
+# not via the ConfigMap's gateway_proxy field
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: apisix-ingress-config
-  namespace: apisix-gitops
-data:
-  config.yaml: |
-    log_level: info
-    controller_name: apisix.apache.org/apisix-ingress-controller
-    leader_election_id: apisix-ingress-controller-leader
-    leader_election:
-      leaseDuration: 15s
-      renewDeadline: 10s
-      retryPeriod: 2s
-      disable: false
-    metrics_addr: :8080
-    enable_http2: false
-    probe_addr: :8081
-    secure_metrics: false
-    exec_adc_timeout: 15s
-    provider:
-      type: apisix
-      sync_period: 1m
-      init_sync_delay: 5s
-      gateway_proxy:
-        - namespace: apisix-gitops
-          name: apisix-gateway-proxy
-    webhook:
-      enable: true
-      port: 9443
-      tls_cert_file: "tls.crt"
-      tls_key_file: "tls.key"
-      tls_cert_dir: "/certs"
+  namespace: apisix
 

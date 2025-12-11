@@ -1,0 +1,14 @@
+# ApisixGlobalRule for Prometheus metrics
+# This ensures the prometheus plugin is managed by the ingress controller
+# and resolves the "global_rule prometheus not found" error
+apiVersion: apisix.apache.org/v2
+kind: ApisixGlobalRule
+metadata:
+  name: prometheus
+  namespace: apisix-gitops
+spec:
+  plugins:
+    - name: prometheus
+      enable: true
+      config: {}
+

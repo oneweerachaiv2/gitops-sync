@@ -1,0 +1,38 @@
+# =============================================================================
+# ArgoCD Application for Gateway API Resources
+# =============================================================================
+# This application manages the Gateway API resources in the apisix-gitops namespace
+# Including GatewayProxy, IngressClass, Gateway, HTTPRoutes, etc.
+# =============================================================================
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: apisix-gateway-api
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: apisix-gateway-api
+    app.kubernetes.io/part-of: apisix
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/oneweerachaiv2/apisix-configs.git
+    targetRevision: main
+    path: gateway-api
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: apisix-argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+

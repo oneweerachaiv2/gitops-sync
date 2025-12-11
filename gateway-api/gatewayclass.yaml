@@ -3,7 +3,7 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass
 metadata:
-  name: apisix-gitops
+  name: apisix-argocd
 spec:
   controllerName: apisix.apache.org/apisix-ingress-controller
   description: "APISIX Gateway API Controller"
