@@ -16,7 +16,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/oneweerachaiv2/apisix-sync.git
+    repoURL: https://github.com/oneweerachaiv2/gitops-sync.git
     targetRevision: main
     path: gateway-api
   destination:
